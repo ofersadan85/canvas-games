@@ -31,6 +31,8 @@ class TicTacToe {
         this.canvas.width = window.innerWidth / 3;
         this.canvas.height = window.innerWidth / 3;
         this.gameOver = false;
+        this.currentPlayer = "X";
+
         this.ctx.fillStyle = "black";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -140,16 +142,38 @@ class TicTacToe {
         return { foundWinner: "" };
     }
 
-    handleClick(event) {
-        const cellX = Math.floor(event.offsetX / this.cellSize());
-        const cellY = Math.floor(event.offsetY / this.cellSize());
-        console.log(`Clicked row ${cellY} column ${cellX}`);
-        if (this.gameOver || this.board[cellY][cellX] !== "") return;
+    checkDraw() {
+        for (let i = 0; i < 3; i++) {
+            let rowSet = new Set(this.board[i]);
+            if (rowSet.has("")) return false;
+        }
+        return true;
+    }
 
-        this.board[cellY][cellX] = this.currentPlayer;
-        this.currentPlayer === "X" ? this.drawX(cellX, cellY) : this.drawO(cellX, cellY);
+    getMousePosition(canvas, event) {
+        var rect = this.canvas.getBoundingClientRect();
+        var scaleX = this.canvas.width / rect.width;
+        var scaleY = this.canvas.height / rect.height;
+        return {
+            x: Math.floor(((event.clientX - rect.left) * scaleX) / this.cellSize()),
+            y: Math.floor(((event.clientY - rect.top) * scaleY) / this.cellSize()),
+        };
+    }
+
+    handleClick(event) {
+        const cell = this.getMousePosition(this.canvas, event);
+        console.debug(`Clicked row ${cell.y} column ${cell.x}`);
+        if (this.gameOver || this.board[cell.y][cell.x] !== "") return;
+
+        this.board[cell.y][cell.x] = this.currentPlayer;
+        this.currentPlayer === "X" ? this.drawX(cell.x, cell.y) : this.drawO(cell.x, cell.y);
         this.switchPlayer();
         document.getElementById("currentPlayer").innerText = this.currentPlayer;
+
+        if (this.checkDraw()) {
+            this.gameOver = true;
+            document.getElementById("winner").innerText = "Draw!";
+        }
 
         let result = this.checkWin();
         if (result.foundWinner !== "") {

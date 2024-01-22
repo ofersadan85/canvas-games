@@ -1,0 +1,40 @@
+/* Global styles */
+body {
+    font-family: "Arial", sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0.5em;
+}
+
+#gameCanvas {
+    border: 1px solid #333;
+}
+
+/* Reset button styles */
+#resetButton {
+    margin: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#resetButton:hover {
+    background-color: #0006b3;
+}
