@@ -28,8 +28,9 @@ class TicTacToe {
     }
 
     reset() {
-        this.canvas.width = window.innerWidth / 3;
-        this.canvas.height = window.innerWidth / 3;
+        const canvasSize = Math.min(window.innerWidth, window.innerHeight) * 0.7;
+        this.canvas.width = canvasSize;
+        this.canvas.height = canvasSize;
         this.gameOver = false;
         this.currentPlayer = "X";
 
