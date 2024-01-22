@@ -1,146 +1,172 @@
-const cellSize = 100;
-const cellPadding = cellSize * 0.2;
+"use strict";
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-canvas.width = 3 * cellSize;
-canvas.height = 3 * cellSize;
+class TicTacToe {
+    constructor(canvasID) {
+        this.canvas = document.getElementById(canvasID);
+        this.ctx = this.canvas.getContext("2d");
+        this.gameOver = false;
+        this.currentPlayer = "X";
+        this.board = [
+            ["", "", ""],
+            ["", "", ""],
+            ["", "", ""],
+        ];
+        this.canvas.addEventListener("click", (event) => this.handleClick(event));
+        this.reset();
+    }
 
-const currentPlayer = document.getElementById("currentPlayer");
-const winner = document.getElementById("winner");
-const board = [
-    ["", "", ""],
-    ["", "", ""],
-    ["", "", ""],
-];
+    cellSize() {
+        return this.canvas.width / 3;
+    }
 
-function resetBoard() {
-    ctx.fillStyle = "black";
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 5;
+    cellPadding() {
+        return this.cellSize() * 0.2;
+    }
 
-    // Draw the vertical lines
-    ctx.beginPath();
-    ctx.moveTo(cellSize, 0);
-    ctx.lineTo(cellSize, canvas.height);
-    ctx.moveTo(cellSize * 2, 0);
-    ctx.lineTo(cellSize * 2, canvas.height);
+    switchPlayer() {
+        this.currentPlayer = this.currentPlayer === "X" ? "O" : "X";
+    }
 
-    // Draw the horizontal lines
-    ctx.moveTo(0, cellSize);
-    ctx.lineTo(canvas.width, cellSize);
-    ctx.moveTo(0, cellSize * 2);
-    ctx.lineTo(canvas.width, cellSize * 2);
-    ctx.stroke();
+    reset() {
+        this.canvas.width = window.innerWidth / 3;
+        this.canvas.height = window.innerWidth / 3;
+        this.gameOver = false;
+        this.ctx.fillStyle = "black";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-            board[i][j] = "";
+        this.ctx.strokeStyle = "white";
+        this.ctx.lineWidth = 5;
+        this.ctx.beginPath();
+
+        // Draw the vertical lines
+        this.ctx.moveTo(this.cellSize(), 0);
+        this.ctx.lineTo(this.cellSize(), this.canvas.height);
+        this.ctx.moveTo(this.cellSize() * 2, 0);
+        this.ctx.lineTo(this.cellSize() * 2, this.canvas.height);
+
+        // Draw the horizontal lines
+        this.ctx.moveTo(0, this.cellSize());
+        this.ctx.lineTo(this.canvas.width, this.cellSize());
+        this.ctx.moveTo(0, this.cellSize() * 2);
+        this.ctx.lineTo(this.canvas.width, this.cellSize() * 2);
+        this.ctx.stroke();
+
+        this.board = [
+            ["", "", ""],
+            ["", "", ""],
+            ["", "", ""],
+        ];
+        document.getElementById("currentPlayer").innerText = "X";
+        document.getElementById("winner").innerText = "";
+    }
+
+    drawX(x, y) {
+        const xLeft = this.cellSize() * x + this.cellPadding();
+        const xRight = xLeft + this.cellSize() - this.cellPadding() * 2;
+        const yTop = this.cellSize() * y + this.cellPadding();
+        const yBottom = yTop + this.cellSize() - this.cellPadding() * 2;
+        this.ctx.strokeStyle = "white";
+        this.ctx.lineWidth = 5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(xLeft, yTop);
+        this.ctx.lineTo(xRight, yBottom);
+        this.ctx.moveTo(xLeft, yBottom);
+        this.ctx.lineTo(xRight, yTop);
+        this.ctx.stroke();
+    }
+
+    drawO(x, y) {
+        const centerX = x * this.cellSize() + this.cellSize() / 2;
+        const centerY = y * this.cellSize() + this.cellSize() / 2;
+        const cellRadius = (this.cellSize() - this.cellPadding()) / 2;
+        this.ctx.strokeStyle = "white";
+        this.ctx.lineWidth = 5;
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, cellRadius, 0, Math.PI * 2);
+        this.ctx.stroke();
+    }
+
+    checkWin() {
+        for (let i = 0; i < 3; i++) {
+            // Check horizontal
+            let rowSet = new Set(this.board[i]);
+            if (rowSet.size == 1 && !rowSet.has("")) {
+                let lineY = i * this.cellSize() + this.cellSize() / 2;
+                return {
+                    lineStartX: 0,
+                    lineStartY: lineY,
+                    lineEndX: this.canvas.width,
+                    lineEndY: lineY,
+                    foundWinner: this.board[i][0],
+                };
+            }
+
+            // Check vertical
+            let columnSet = new Set([this.board[0][i], this.board[1][i], this.board[2][i]]);
+            if (columnSet.size == 1 && !columnSet.has("")) {
+                let lineX = i * this.cellSize() + this.cellSize() / 2;
+                return {
+                    lineStartX: lineX,
+                    lineStartY: 0,
+                    lineEndX: lineX,
+                    lineEndY: this.canvas.height,
+                    foundWinner: this.board[0][i],
+                };
+            }
+        }
+
+        // Check diagonal (top left to bottom right)
+        let diagonalSet = new Set([this.board[0][0], this.board[1][1], this.board[2][2]]);
+        if (diagonalSet.size == 1 && !diagonalSet.has(""))
+            return {
+                lineStartX: 0,
+                lineStartY: 0,
+                lineEndX: this.canvas.width,
+                lineEndY: this.canvas.height,
+                foundWinner: this.board[1][1],
+            };
+
+        // Check diagonal (bottom left to top right)
+        diagonalSet = new Set([this.board[2][0], this.board[1][1], this.board[0][2]]);
+        if (diagonalSet.size == 1 && !diagonalSet.has(""))
+            return {
+                lineStartX: 0,
+                lineStartY: this.canvas.height,
+                lineEndX: this.canvas.width,
+                lineEndY: 0,
+                foundWinner: this.board[1][1],
+            };
+
+        return { foundWinner: "" };
+    }
+
+    handleClick(event) {
+        const cellX = Math.floor(event.offsetX / this.cellSize());
+        const cellY = Math.floor(event.offsetY / this.cellSize());
+        console.log(`Clicked row ${cellY} column ${cellX}`);
+        if (this.gameOver || this.board[cellY][cellX] !== "") return;
+
+        this.board[cellY][cellX] = this.currentPlayer;
+        this.currentPlayer === "X" ? this.drawX(cellX, cellY) : this.drawO(cellX, cellY);
+        this.switchPlayer();
+        document.getElementById("currentPlayer").innerText = this.currentPlayer;
+
+        let result = this.checkWin();
+        if (result.foundWinner !== "") {
+            this.gameOver = true;
+            this.ctx.strokeStyle = "red";
+            this.ctx.lineWidth = 1;
+            this.ctx.beginPath();
+            this.ctx.moveTo(result.lineStartX, result.lineStartY);
+            this.ctx.lineTo(result.lineEndX, result.lineEndY);
+            this.ctx.stroke();
+            document.getElementById("winner").innerText = result.foundWinner + " wins!";
         }
     }
-    currentPlayer.textContent = "X";
-    winner.textContent = "";
-    canvas.addEventListener("click", handleClick);
 }
 
-function drawX(x, y) {
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(x * cellSize + cellPadding, y * cellSize + cellPadding);
-    ctx.lineTo(x * cellSize + cellSize - cellPadding, y * cellSize + cellSize - cellPadding);
-    ctx.moveTo(x * cellSize + cellSize - cellPadding, y * cellSize + cellPadding);
-    ctx.lineTo(x * cellSize + cellPadding, y * cellSize + cellSize - cellPadding);
-    ctx.stroke();
-}
-
-function drawO(x, y) {
-    const centerX = x * cellSize + cellSize / 2;
-    const centerY = y * cellSize + cellSize / 2;
-    const cellRadius = (cellSize - cellPadding) / 2;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, cellRadius, 0, Math.PI * 2);
-    ctx.stroke();
-}
-
-function markWinner() {
-    // Check horizontal
-    let foundWinner = "";
-    for (let i = 0; i < 3; i++) {
-        if (board[i][0] !== "" && board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.moveTo(0, i * cellSize + cellSize / 2);
-            ctx.lineTo(canvas.width, i * cellSize + cellSize / 2);
-            ctx.stroke();
-            foundWinner = board[i][0];
-        }
-    }
-
-    // Check vertical
-    for (let i = 0; i < 3; i++) {
-        if (board[0][i] !== "" && board[0][i] === board[1][i] && board[1][i] === board[2][i]) {
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.moveTo(i * cellSize + cellSize / 2, 0);
-            ctx.lineTo(i * cellSize + cellSize / 2, canvas.height);
-            ctx.stroke();
-            foundWinner = board[i][0];
-        }
-    }
-
-    // Check diagonal
-    if (board[0][0] !== "" && board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(canvas.width, canvas.height);
-        ctx.stroke();
-        foundWinner = board[0][0];
-    }
-    if (board[0][2] !== "" && board[0][2] === board[1][1] && board[1][1] === board[2][0]) {
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(canvas.width, 0);
-        ctx.lineTo(0, canvas.height);
-        ctx.stroke();
-        foundWinner = board[0][2];
-    }
-
-    if (foundWinner !== "") {
-        winner.textContent = foundWinner + " wins!";
-        canvas.removeEventListener("click", handleClick);
-    }
-}
-
-function handleClick(event) {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    const indexX = Math.floor(x / cellSize);
-    const indexY = Math.floor(y / cellSize);
-
-    if (board[indexY][indexX] !== "") {
-        return;
-    }
-
-    board[indexY][indexX] = currentPlayer.textContent;
-    if (currentPlayer.textContent === "X") {
-        drawX(indexX, indexY);
-        currentPlayer.textContent = "O";
-    } else {
-        drawO(indexX, indexY);
-        currentPlayer.textContent = "X";
-    }
-    markWinner();
-}
-
-document.getElementById("resetButton").addEventListener("click", resetBoard);
-window.addEventListener("load", resetBoard);
+window.addEventListener("load", () => {
+    let game = new TicTacToe("gameCanvas");
+    document.getElementById("resetButton").addEventListener("click", () => game.reset());
+    window.addEventListener("resize", () => game.reset());
+});
